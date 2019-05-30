@@ -1,54 +1,54 @@
 import boto3
 from datetime import datetime, timedelta
 from hurry.filesize import size
+from tabulate import tabulate
 
 now = datetime.now().replace(tzinfo=None)
 
+# Using AWS' boto3 SDK for python for access to AWS services - https://boto3.readthedocs.io/
+# The S3 Client provides low-level access to S3 resources.
+# The S3 Resource provides high-level abstraction.
+# The Cost Client - Cost Explorer - is part of AWS' Cost Management APIs for billed usage.
 s3client = boto3.client('s3')
 s3resource = boto3.resource('s3')
-cost = boto3.client('ce')
-
+cost_client = boto3.client('ce')
 
 # Get a list of all buckets
 allbuckets = s3resource.buckets.all()
 bucket_size = 0
 obj_dict = {}
-obj_count = 0
-
-print('Bucket name'.ljust(25) + 'Created on'.ljust(25) + 'Size'.center(25) + 'Number of objects'.ljust(25))
 
 # Loop through each bucket
 for bucket in allbuckets:
+    # Retrieve bucket location
+    location = s3client.get_bucket_location(Bucket=bucket.name)['LocationConstraint']
 
-    # For each object get details
+    # Retrieve each object in the bucket
     for obj in bucket.objects.all():
 
-        more = obj.Object()
-        obj_age = now - obj.last_modified.replace(tzinfo=None)
         obj_name = obj.key
-        obj_size = more.content_length
+        obj_age = now - obj.last_modified.replace(tzinfo=None)
         obj_mod = obj.last_modified.replace(tzinfo=None)
         obj_class = obj.storage_class
+        more = obj.Object()
+        obj_size = more.content_length
 
         bucket_size += obj_size
 
-	if obj_name.endswith('/'):
-	    pass
+        if obj_name.endswith('/'):
+            pass
 
-	else:
-	    obj_dict[obj_name] = {'name': obj_name, 'modified': obj_mod, \
-                'size': size(obj_size), 'age': obj_age.total_seconds(), 'class': obj_class}
-
-	    obj_count += 1
+        else:
+            obj_dict[obj_name] = {'Name': obj_name, 'Last Modified': obj_mod, \
+                'Size': size(obj_size), 'Age in Days': obj_age.days, 'Class': obj_class}
 
     # List Bucket details
-    print('{0:<25}{1}{2:^25}{3:^25}'.format(bucket.name,bucket.creation_date,size(bucket_size),obj_count))
+    print(tabulate([['Bucket name','Creation Date','Location','Size','Number of objects'], \
+		[bucket.name,bucket.creation_date,location,size(bucket_size),len(obj_dict)]],headers='firstrow'))
 
-    # List Object details within bucket
-    print('Files:')
-    for item in obj_dict.values():
-	print('Name: {0} \nClass: {1} \nModified: {2} \nAge: {3:0.2f}s \nSize: {4}'.format(item['name'], \
-		item['class'], item['modified'], int(item['age']), item['size']))
+    # List objects within the bucket and their details
+    print('\nObjects:')
+    print(tabulate(obj_dict.values(),headers='keys'))
 
 # Get cost of service using cost explorer
 start = (now - timedelta(days=30)).strftime('%Y-%m-%d')
@@ -63,12 +63,12 @@ while True:
         kwargs = {'NextPageToken': token}
     else:
         kwargs = {}
-    data = cost.get_cost_and_usage( \
-	Filter={'Dimensions': {'Key':'SERVICE', 'Values': ['Amazon Simple Storage Service']}}, \
-	TimePeriod={'Start': start, 'End':  end}, \
-	Granularity='MONTHLY', Metrics=['UnblendedCost','BlendedCost','UsageQuantity'], \
-	GroupBy=[{'Type': 'DIMENSION', 'Key': 'LINKED_ACCOUNT'}, \
-		{'Type': 'DIMENSION', 'Key': 'SERVICE'}], **kwargs)
+    data = cost_client.get_cost_and_usage( \
+        Filter={'Dimensions': {'Key':'SERVICE', 'Values': ['Amazon Simple Storage Service']}}, \
+        TimePeriod={'Start': start, 'End':  end}, \
+        Granularity='MONTHLY', Metrics=['UnblendedCost'], \
+        GroupBy=[{'Type': 'DIMENSION', 'Key': 'LINKED_ACCOUNT'}, \
+                {'Type': 'DIMENSION', 'Key': 'SERVICE'}], **kwargs)
 
     results += data['ResultsByTime']
     token = data.get('NextPageToken')
@@ -76,12 +76,11 @@ while True:
     if not token:
         break
 
-# List Cost details
-print('Service'.ljust(25) + 'Amount'.center(25) + 'Unit'.center(25))
-
+# List S3 Cost details
+print('\nCost Details')
 for result_by_time in results:
 
     for group in result_by_time['Groups']:
         amount = group['Metrics']['UnblendedCost']['Amount']
         unit = group['Metrics']['UnblendedCost']['Unit']
-        print('{0}{1:^25}{2:^25}'.format(group['Keys'].pop(), amount, unit))
+	print(tabulate([['Service','Amount','Unit'],[group['Keys'].pop(),amount,unit]],headers='firstrow'))
