@@ -11,16 +11,12 @@ s3client = boto3.client('s3')
 s3resource = boto3.resource('s3')
 cost_client = boto3.client('ce')
 
-#allbuckets = s3resource.buckets.all()
-
+# function for retrieving object details within each bucket value passed
 def retrieve_objects(bucket):
-# Loop through each bucket
-
-   #bucket = s3resource.Bucket(bucket_name)
-    # print('--->',bucket)
     bucket_size = 0
     obj_dict = {}
-
+	
+	# loop through object contents to retrieve details
     for obj in bucket.objects.all():
 
         obj_name = obj.key
@@ -31,7 +27,8 @@ def retrieve_objects(bucket):
         obj_size = more.content_length
 
         bucket_size += obj_size
-
+	
+		# ignore folders which are considered objects in AWS from object tracking
         if obj_name.endswith('/'):
             pass
 
@@ -41,9 +38,8 @@ def retrieve_objects(bucket):
 
     return obj_dict, bucket_size
 
+# function to estimate costs for each S3 bucket using Cost Explorer
 def estimate_s3_costs():
-
-    # Get cost of service using cost explorer
     start = (now - timedelta(days=30)).strftime('%Y-%m-%d')
     end = now.strftime('%Y-%m-%d')
 
@@ -51,6 +47,7 @@ def estimate_s3_costs():
 
     token = None
 
+	# filter results required for estimating service costs
     while True:
         if token:
             kwargs = {'NextPageToken': token}
@@ -75,6 +72,7 @@ def estimate_s3_costs():
 	    unit = result['Groups'][0]['Metrics']['UnblendedCost']['Unit']
     return amount, unit
 
+# function for listing buckets and content details
 def list_all_buckets(bucket):
 
     obj_dict, bucket_size = retrieve_objects(bucket)
@@ -89,10 +87,11 @@ def list_all_buckets(bucket):
     print(tabulate(sorted(obj_dict.values(), key=operator.itemgetter('Class')),headers='keys'))
 	
 if __name__ == '__main__':
-
+	# try to grab bucket name passed in env var to filter details only for that bucket
     if len(sys.argv) > 1:
         list_all_buckets(s3resource.Bucket(sys.argv[1]))
     else:
+		# if no bucket passed in env var, this will list all bucket resources
     	allbuckets = [bucket for bucket in s3resource.buckets.all()]
     	for bucket in allbuckets:
             list_all_buckets(bucket)
