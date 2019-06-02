@@ -7,12 +7,12 @@ Simple script to generate AWS S3 Bucket details using Boto3 and AWS Cost Explore
 
 1) Install the dependencies:
 
-$ pip install -r requirements.txt
+  $ pip install -r requirements.txt
 
 
 2) If not already done, set up credentials (in ~/.aws/credentials) by running:
 
-$ aws configure
+  $ aws configure
 
 See other methods of configuring credentials [here](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html)
 
@@ -22,10 +22,10 @@ See other methods of configuring credentials [here](https://boto3.amazonaws.com/
 
 Run the script as is to get the output for all your S3 buckets associated to that account:
 
-$ ./s3_bucket_analyzer.py > s3_bucket_analysis.csv
+  $ ./s3_bucket_analyzer.py > s3_bucket_analysis.csv
 
 You can retrieve details for a specific bucket by specifying the bucket name as an environment variable argurment like so:
 
-$ ./s3_bucket_analyzer.py BUCKET_NAME > s3_bucket_analysis_BUCKET_NAME.csv
+  $ ./s3_bucket_analyzer.py BUCKET_NAME > s3_bucket_analysis_BUCKET_NAME.csv
 
 You will get a result as long as the bucket exists!
