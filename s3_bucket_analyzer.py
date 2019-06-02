@@ -18,7 +18,7 @@ def retrieve_objects(bucket):
     bucket_size = 0
     obj_dict = {}
 	
-    # loop through object contents to retrieve details
+    # loop through object contents to retrieve details 
     for obj in bucket.objects.all():
 
         obj_name = obj.key
