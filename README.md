@@ -22,7 +22,7 @@ See other methods of configuring credentials [here](https://boto3.amazonaws.com/
 
 Run the script as is to get the output for all your S3 buckets associated to that account:
 
-$ python s3_bucket_analyzer.py > s3_bucket_analysis.csv
+$ ./s3_bucket_analyzer.py > s3_bucket_analysis.csv
 
 You can retrieve details for a specific bucket by specifying the bucket name as an environment variable argurment like so:
 
