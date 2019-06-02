@@ -20,6 +20,12 @@ See other methods of configuring credentials [here](https://boto3.amazonaws.com/
 
 # Usage
 
-Run the script to get the output for all your S3 buckets associated to that account:
+Run the script as is to get the output for all your S3 buckets associated to that account:
 
 $ python s3_bucket_analyzer.py > s3_bucket_analysis.csv
+
+You can retrieve details for a specific bucket by specifying the bucket name as an environment variable argurment like so:
+
+$ ./s3_bucket_analyzer.py BUCKET_NAME > s3_bucket_analysis_BUCKET_NAME.csv
+
+You will get a result as long as the bucket exists!
