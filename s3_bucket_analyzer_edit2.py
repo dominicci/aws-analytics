@@ -16,7 +16,7 @@ def retrieve_objects(bucket):
     bucket_size = 0
     obj_dict = {}
 	
-	# loop through object contents to retrieve details
+    # loop through object contents to retrieve details
     for obj in bucket.objects.all():
 
         obj_name = obj.key
@@ -28,7 +28,7 @@ def retrieve_objects(bucket):
 
         bucket_size += obj_size
 	
-		# ignore folders which are considered objects in AWS from object tracking
+	# ignore folders which are considered objects in AWS from object tracking
         if obj_name.endswith('/'):
             pass
 
@@ -47,7 +47,7 @@ def estimate_s3_costs():
 
     token = None
 
-	# filter results required for estimating service costs
+    # filter results required for estimating service costs
     while True:
         if token:
             kwargs = {'NextPageToken': token}
@@ -82,16 +82,19 @@ def list_all_buckets(bucket):
     print(tabulate([['Bucket name','Creation Date','Location','Size','Number of objects','Total Cost'], \
         [bucket.name,bucket.creation_date,location,size(bucket_size),len(obj_dict)," ".join([unit,amount])]],headers='firstrow'))
     
-	# List objects within the bucket and their details
+    # List objects within the bucket and their details
     print('\nObjects:')
     print(tabulate(sorted(obj_dict.values(), key=operator.itemgetter('Class')),headers='keys'))
 	
 if __name__ == '__main__':
-	# try to grab bucket name passed in env var to filter details only for that bucket
+    # try to grab bucket name passed in env var to filter details only for that bucket
     if len(sys.argv) > 1:
-        list_all_buckets(s3resource.Bucket(sys.argv[1]))
+        try:
+            list_all_buckets(s3resource.Bucket(sys.argv[1]))
+        except Exception as e:
+            print('No Such bucket!')
     else:
-		# if no bucket passed in env var, this will list all bucket resources
+	# if no bucket passed in env var, this will list all bucket resources
     	allbuckets = [bucket for bucket in s3resource.buckets.all()]
     	for bucket in allbuckets:
             list_all_buckets(bucket)
