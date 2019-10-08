@@ -1,5 +1,4 @@
-# Demo change -
-# AWS-S3-Analyzer
+# Super AWS-S3-Analyzer
 
 Simple script to generate AWS S3 Bucket details using Boto3 and AWS Cost Explorer API.
 [Boto3](https://boto3.readthedocs.io/) is an AWS SDK for python to enable low-level access to AWS services
@@ -29,4 +28,4 @@ You can retrieve details for a specific bucket by specifying the bucket name as 
 
   $ python s3_bucket_analyzer.py BUCKET_NAME > s3_bucket_analysis_BUCKET_NAME.csv
 
-You will get a result as long as the bucket exists!
+That's all!
